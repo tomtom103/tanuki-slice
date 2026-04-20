@@ -152,3 +152,52 @@ def fetch_mr_diff(client: GitLabClient, project_id: int, mr_iid: int) -> MRDiff:
             )
         )
     return MRDiff(base_sha=base_sha, start_sha=start_sha, head_sha=head_sha, files=files)
+
+
+def render_for_prompt(diff: MRDiff) -> str:
+    """Compact unified format with explicit [new_line] annotations."""
+    out: list[str] = []
+    for f in diff.files:
+        if f.new_file:
+            label = "new file"
+        elif f.deleted_file:
+            label = "deleted"
+        elif f.renamed_file:
+            label = f"renamed from {f.old_path}"
+        else:
+            label = "modified"
+        out.append(f"### {f.new_path or f.old_path}  ({label})")
+        for h in f.hunks:
+            out.append(f"@@ -{h.old_start} +{h.new_start} @@")
+            for ln in h.lines:
+                tag = f"[{ln.new_line}]" if ln.new_line is not None else "[-- ]"
+                prefix = {
+                    "added": "+",
+                    "deleted": "-",
+                    "context": " ",
+                }[ln.kind]
+                out.append(f"{prefix} {tag} {ln.text}")
+        out.append("")
+    return "\n".join(out)
+
+
+def position_for(diff: MRDiff, new_path: str, new_line: int) -> DiffPosition | None:
+    """Build an inline-comment position for a finding at new_path:new_line, or None."""
+    for f in diff.files:
+        if f.new_path != new_path:
+            continue
+        for h in f.hunks:
+            for ln in h.lines:
+                if ln.kind == "deleted":
+                    continue
+                if ln.new_line == new_line:
+                    return DiffPosition(
+                        base_sha=diff.base_sha,
+                        start_sha=diff.start_sha,
+                        head_sha=diff.head_sha,
+                        old_path=f.old_path or None,
+                        new_path=f.new_path,
+                        new_line=new_line,
+                        old_line=ln.old_line,
+                    )
+    return None
