@@ -5,10 +5,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from tanuki_slice.core.tokens import estimate_tokens
 
-def estimate_tokens(text: str) -> int:
-    """Rough token estimate: ~4 chars per token for English/code mixed content."""
-    return max(1, len(text) // 4)
+__all__ = [
+    "Chunk",
+    "MRMetadata",
+    "Note",
+    "Thread",
+    "estimate_tokens",
+]
 
 
 @dataclass
