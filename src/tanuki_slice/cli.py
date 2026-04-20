@@ -15,13 +15,14 @@ from tanuki_slice.core.client import GitLabAPIError
 
 app = typer.Typer(
     name="tanuki-slice",
-    help="Scrape GitLab MR comments and split into LLM-ready chunks.",
+    help="Scrape and review GitLab merge requests for LLM workflows.",
     add_completion=False,
+    no_args_is_help=True,
 )
 
 
-@app.command()
-def main(
+@app.command("chunk")
+def chunk_cmd(
     project_id: Annotated[int, typer.Option("--project-id", help="GitLab project ID")],
     mr_iid: Annotated[int, typer.Option("--mr-iid", help="Merge request IID")],
     budget: Annotated[int, typer.Option("--budget", help="Token budget per chunk")] = 4000,
@@ -81,6 +82,13 @@ def main(
         typer.echo(f"Wrote {len(chunks)} chunks to {output}")
     else:
         typer.echo(json_output)
+
+
+@app.command("review")
+def review_cmd() -> None:
+    """Review a merge request with Claude. (Not implemented yet.)"""
+    typer.echo("review: not implemented yet", err=True)
+    raise typer.Exit(code=2)
 
 
 if __name__ == "__main__":
