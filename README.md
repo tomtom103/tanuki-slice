@@ -1,0 +1,109 @@
+# tanuki-slice
+
+Chunk GitLab merge request discussion threads into deterministic, budget-aware batches for LLM and agentic workflows.
+
+Reviewing a 400-comment MR with an LLM blows past every context window. `tanuki-slice` scrapes the MR's discussions via the GitLab API, groups comments and replies by file, and splits them into token-budgeted chunks that preserve file locality and thread context — so each chunk fits your model and can be processed in isolation.
+
+## Features
+
+- Stdlib-only HTTP client (no `requests` / `httpx` dependency).
+- Greedy bin-packing that keeps same-file threads together.
+- Oversized threads get their own chunk instead of being silently dropped.
+- Resolved threads filtered out by default; opt in with `--include-resolved`.
+- Deterministic ordering (file path, then discussion id) for stable diffs between runs.
+- Strict typing, `py.typed` shipped for downstream consumers.
+
+## Installation
+
+```bash
+uv sync
+```
+
+Or from PyPI once published:
+
+```bash
+pip install tanuki-slice
+```
+
+## Usage
+
+### CLI
+
+```bash
+# Set your GitLab token
+export GITLAB_TOKEN="glpat-xxx"
+
+# Chunk an MR's discussions into JSON
+tanuki-slice --project-id 123 --mr-iid 45
+
+# Custom token budget and output file
+tanuki-slice --project-id 123 --mr-iid 45 --budget 8000 -o chunks.json
+
+# Quick summary view
+tanuki-slice --project-id 123 --mr-iid 45 --summary
+
+# Include resolved threads
+tanuki-slice --project-id 123 --mr-iid 45 --include-resolved
+
+# Self-hosted GitLab
+tanuki-slice --project-id 123 --mr-iid 45 --gitlab-url https://gitlab.example.com
+```
+
+### Library
+
+```python
+from tanuki_slice import GitLabMRChunker
+
+chunker = GitLabMRChunker(token="glpat-xxx")
+chunks = chunker.scrape_and_chunk(project_id=123, mr_iid=45, token_budget=4000)
+
+for chunk in chunks:
+    print(chunk.to_dict())
+```
+
+## Output shape
+
+Each chunk serializes to:
+
+```json
+{
+  "chunk_id": "1/3",
+  "mr_metadata": { "project_id": 123, "mr_iid": 45, "title": "...", "...": "..." },
+  "files": [
+    {
+      "path": "src/foo.py",
+      "threads": [
+        {
+          "discussion_id": "abc",
+          "line": 42,
+          "resolved": false,
+          "notes": [{ "id": 1, "author": "alice", "body": "...", "created_at": "..." }]
+        }
+      ]
+    }
+  ],
+  "stats": { "thread_count": 7, "estimated_tokens": 3820 }
+}
+```
+
+Token counts are rough (`~4 chars/token`) — good enough for budgeting, not for billing.
+
+## Configuration
+
+| Environment Variable | Description | Default |
+|---|---|---|
+| `GITLAB_TOKEN` | Personal access token with `api` scope | *required* |
+| `GITLAB_URL` | GitLab instance URL | `https://gitlab.com` |
+
+## Development
+
+```bash
+uv sync
+uv run pytest
+uv run ruff check src/ tests/
+uv run mypy src/
+```
+
+## License
+
+MIT — see [LICENSE](LICENSE).

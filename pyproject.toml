@@ -1,0 +1,64 @@
+[project]
+name = "tanuki-slice"
+version = "0.1.0"
+description = "Chunk GitLab merge request discussion threads into token-budgeted batches for LLM and agentic workflows"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Thomas Caron", email = "thomas.caron00@gmail.com" }
+]
+requires-python = ">=3.12"
+keywords = ["gitlab", "merge-request", "llm", "chunking", "agents", "code-review"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Version Control :: Git",
+    "Topic :: Software Development :: Quality Assurance",
+    "Typing :: Typed",
+]
+dependencies = [
+    "typer>=0.24.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/tomtom103/tanuki-slice"
+Repository = "https://github.com/tomtom103/tanuki-slice"
+Issues = "https://github.com/tomtom103/tanuki-slice/issues"
+Changelog = "https://github.com/tomtom103/tanuki-slice/blob/main/CHANGELOG.md"
+
+[project.scripts]
+tanuki-slice = "tanuki_slice.cli:app"
+
+[build-system]
+requires = ["uv_build>=0.10.10,<0.11.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.20.0",
+    "pytest>=9.0.3",
+    "ruff>=0.15.9",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
