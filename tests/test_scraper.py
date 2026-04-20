@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from tanuki_slice.scraper import scrape_mr
+from tanuki_slice.core.scraper import scrape_mr
 
 
 class FakeClient:

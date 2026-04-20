@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from tanuki_slice.client import GitLabClient
+from tanuki_slice.core.client import GitLabClient
 
 
 def test_parse_next_link_returns_next_url() -> None:

@@ -10,8 +10,8 @@ from urllib.error import URLError
 
 import typer
 
-from tanuki_slice.chunker import GitLabMRChunker
-from tanuki_slice.client import GitLabAPIError
+from tanuki_slice.core.chunker import GitLabMRChunker
+from tanuki_slice.core.client import GitLabAPIError
 
 app = typer.Typer(
     name="tanuki-slice",

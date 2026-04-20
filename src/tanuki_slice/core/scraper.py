@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from tanuki_slice.client import GitLabClient
-from tanuki_slice.models import MRMetadata, Note, Thread
+from tanuki_slice.core.client import GitLabClient
+from tanuki_slice.core.models import MRMetadata, Note, Thread
 
 
 def scrape_mr(

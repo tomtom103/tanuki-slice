@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from tanuki_slice.models import Chunk, MRMetadata, Note, Thread, estimate_tokens
+from tanuki_slice.core.models import Chunk, MRMetadata, Note, Thread, estimate_tokens
 
 
 def _mr() -> MRMetadata:

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import os
 
-from tanuki_slice.client import GitLabClient
-from tanuki_slice.models import Chunk, MRMetadata, Thread
-from tanuki_slice.scraper import scrape_mr
+from tanuki_slice.core.client import GitLabClient
+from tanuki_slice.core.models import Chunk, MRMetadata, Thread
+from tanuki_slice.core.scraper import scrape_mr
 
 
 def chunk_threads(

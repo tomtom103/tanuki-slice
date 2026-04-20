@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from tanuki_slice.chunker import chunk_threads
-from tanuki_slice.models import MRMetadata, Note, Thread
+from tanuki_slice.core.chunker import chunk_threads
+from tanuki_slice.core.models import MRMetadata, Note, Thread
 
 
 def _mr() -> MRMetadata:
