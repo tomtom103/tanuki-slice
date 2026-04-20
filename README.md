@@ -27,27 +27,49 @@ pip install tanuki-slice
 
 ## Usage
 
-### CLI
+### `chunk` — split MR discussions
 
 ```bash
 # Set your GitLab token
 export GITLAB_TOKEN="glpat-xxx"
 
 # Chunk an MR's discussions into JSON
-tanuki-slice --project-id 123 --mr-iid 45
+tanuki-slice chunk --project-id 123 --mr-iid 45
 
 # Custom token budget and output file
-tanuki-slice --project-id 123 --mr-iid 45 --budget 8000 -o chunks.json
+tanuki-slice chunk --project-id 123 --mr-iid 45 --budget 8000 -o chunks.json
 
 # Quick summary view
-tanuki-slice --project-id 123 --mr-iid 45 --summary
+tanuki-slice chunk --project-id 123 --mr-iid 45 --summary
 
 # Include resolved threads
-tanuki-slice --project-id 123 --mr-iid 45 --include-resolved
+tanuki-slice chunk --project-id 123 --mr-iid 45 --include-resolved
 
 # Self-hosted GitLab
-tanuki-slice --project-id 123 --mr-iid 45 --gitlab-url https://gitlab.example.com
+tanuki-slice chunk --project-id 123 --mr-iid 45 --gitlab-url https://gitlab.example.com
 ```
+
+### `review` — LLM code review
+
+```bash
+# Required env
+export GITLAB_TOKEN="glpat-xxx"
+export ANTHROPIC_API_KEY="sk-ant-xxx"
+
+# Review a MR (post inline + summary comments)
+tanuki-slice review --project-id 123 --mr-iid 45
+
+# Dry-run: print findings only
+tanuki-slice review --project-id 123 --mr-iid 45 --dry-run
+
+# Multi-focus + raise cap
+tanuki-slice review --project-id 123 --mr-iid 45 --focus security --focus style --max-findings 20
+
+# CI-friendly: skip confirm
+tanuki-slice review --project-id 123 --mr-iid 45 --yes
+```
+
+Re-runs are safe: every posted comment embeds a fingerprint marker, and the next run reads existing notes to skip already-raised findings. Project-level defaults can be placed in a `tanuki.toml` file with a `[review]` table; CLI flags override it.
 
 ### Library
 
@@ -94,60 +116,13 @@ Token counts are rough (`~4 chars/token`) — good enough for budgeting, not for
 |---|---|---|
 | `GITLAB_TOKEN` | Personal access token with `api` scope | *required* |
 | `GITLAB_URL` | GitLab instance URL | `https://gitlab.com` |
+| `ANTHROPIC_API_KEY` | Anthropic API key (required for `review`) | *required for review* |
 
-## Roadmap
+`tanuki.toml` in the project root can set review defaults; keys under the `[review]` table map 1:1 to CLI flags (`focus`, `model`, `max_findings`, `max_diff_tokens`, `gitlab_url`).
 
-`tanuki-slice` is evolving from a chunking library into a self-reviewing MR bot. The current `chunk` command handles ingestion; an upcoming `review` subcommand will close the loop by posting LLM-generated feedback directly to a merge request.
+## Status
 
-### Planned: `tanuki-slice review`
-
-```bash
-# Review a MR with Claude, post inline + summary comments
-tanuki-slice review --project-id 123 --mr-iid 45
-
-# Dry-run: print findings, don't post
-tanuki-slice review --project-id 123 --mr-iid 45 --dry-run
-
-# Focus on a specific aspect
-tanuki-slice review --project-id 123 --mr-iid 45 --focus security
-
-# Skip the confirm prompt (for CI)
-tanuki-slice review --project-id 123 --mr-iid 45 --yes
-```
-
-**MVP scope (in design):**
-
-| Feature | Decision |
-|---|---|
-| Interface | CLI only |
-| LLM backend | Anthropic (Claude) |
-| Output | Inline diff comments **and** summary comment on the MR |
-| Dedup | Stateless — fingerprint markers embedded in comment bodies, re-reads existing notes on re-run |
-| Focus | `--focus` flag: `correctness` (default), `security`, `style`, or `all` |
-| Context | Includes existing unresolved discussions so the bot doesn't restate human reviewers |
-| Safety | Post-by-default with `--max-findings` cap and confirm prompt; `--yes` to skip; `--dry-run` to preview |
-| Config | CLI flags + optional `tanuki.toml` project file |
-| Oversized diffs | Fail fast for MVP (no multi-pass chunking yet) |
-
-**Required secrets:** `GITLAB_TOKEN` (unchanged) and `ANTHROPIC_API_KEY` for the review command.
-
-**Package layout after split:**
-
-```
-src/tanuki_slice/
-├── core/        # client, models, scraper, chunker (current code, regrouped)
-└── review/      # new: diff fetch, prompts, LLM, findings, dedup, poster
-```
-
-The existing `chunk` command keeps its behavior; `review` is additive.
-
-### Not in MVP (deferred)
-
-- Webhook / daemon mode (CLI only for now — run from cron or CI).
-- Multi-provider LLM abstraction (Anthropic-only until a second provider earns it).
-- Local dedup DB (GitLab is the source of truth).
-- Cross-chunk finding merging for mega-MRs (fail-fast first, chunk later).
-- MR approval / label automation, pipeline-status gating.
+The `chunk` and `review` commands are available. Future work: webhook daemon, multi-provider LLMs, and cross-chunk review for mega-MRs.
 
 ## Development
 
