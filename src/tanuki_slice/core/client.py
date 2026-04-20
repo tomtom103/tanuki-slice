@@ -89,3 +89,60 @@ class GitLabClient:
             params={"per_page": "100"},
         )
         return result
+
+    def get_mr_notes(self, project_id: int, mr_iid: int) -> list[dict[str, Any]]:
+        pid = quote(str(project_id), safe="")
+        result: list[dict[str, Any]] = self._get(
+            f"/projects/{pid}/merge_requests/{mr_iid}/notes",
+            params={"per_page": "100"},
+        )
+        return result
+
+    def get_mr_diffs(self, project_id: int, mr_iid: int) -> list[dict[str, Any]]:
+        pid = quote(str(project_id), safe="")
+        result: list[dict[str, Any]] = self._get(
+            f"/projects/{pid}/merge_requests/{mr_iid}/diffs",
+            params={"per_page": "100"},
+        )
+        return result
+
+    def _post(self, path: str, body: dict[str, Any]) -> Any:
+        url = f"{self.base_url}/api/v4{path}"
+        payload = json.dumps(body).encode()
+        req = Request(
+            url,
+            data=payload,
+            method="POST",
+            headers={
+                "PRIVATE-TOKEN": self.token,
+                "Content-Type": "application/json",
+            },
+        )
+        try:
+            with urlopen(req) as resp:  # noqa: S310
+                return json.loads(resp.read().decode())
+        except HTTPError as exc:
+            reason = self._extract_reason(exc)
+            raise GitLabAPIError(exc.code, reason, url) from exc
+
+    def create_mr_note(self, project_id: int, mr_iid: int, body: str) -> dict[str, Any]:
+        pid = quote(str(project_id), safe="")
+        result: dict[str, Any] = self._post(
+            f"/projects/{pid}/merge_requests/{mr_iid}/notes",
+            {"body": body},
+        )
+        return result
+
+    def create_mr_discussion(
+        self,
+        project_id: int,
+        mr_iid: int,
+        body: str,
+        position: dict[str, Any],
+    ) -> dict[str, Any]:
+        pid = quote(str(project_id), safe="")
+        result: dict[str, Any] = self._post(
+            f"/projects/{pid}/merge_requests/{mr_iid}/discussions",
+            {"body": body, "position": position},
+        )
+        return result
