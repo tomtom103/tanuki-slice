@@ -1,6 +1,6 @@
 [project]
 name = "tanuki-slice"
-version = "0.1.0"
+version = "0.2.0"
 description = "Chunk GitLab merge request discussion threads into token-budgeted batches for LLM and agentic workflows"
 readme = "README.md"
 license = "MIT"
@@ -22,6 +22,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
+    "anthropic>=0.40.0",
     "typer>=0.24.1",
 ]
 
